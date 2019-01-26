@@ -83,14 +83,14 @@ namespace ChessKnight
             static ChessKnight()
             {
                 MovesLib = new Point[8];
-                MovesLib[0] = new Point( -1, -2 );
-                MovesLib[1] = new Point( 1, -2 );
-                MovesLib[2] = new Point( 2, -1 );
-                MovesLib[3] = new Point( 2, 1 );
-                MovesLib[4] = new Point( 1, 2 );
-                MovesLib[5] = new Point( -1, 2 );
-                MovesLib[6] = new Point( -2, 1 );
-                MovesLib[7] = new Point( -2, -1 );
+                MovesLib[0] = new Point( -2, -1 );
+                MovesLib[1] = new Point( -1, -2 );
+                MovesLib[2] = new Point( 1, -2 );
+                MovesLib[3] = new Point( 2, -1 );
+                MovesLib[4] = new Point( 2, 1 );
+                MovesLib[5] = new Point( 1, 2 );
+                MovesLib[6] = new Point( -1, 2 );
+                MovesLib[7] = new Point( -2, 1 );
             }
 
             /// <summary>
@@ -107,55 +107,27 @@ namespace ChessKnight
         /// <summary>
         /// Доска (шахматная)
         /// </summary>
-        public class ChessBoard
+        public struct ChessBoard
         {
-            /// <summary>
-            /// ширина
-            /// </summary>
-            int width;
-
-            /// <summary>
-            /// высота
-            /// </summary>
-            int height;
-
-            /// <summary>
-            /// элементы (ячейки) доски
-            /// </summary>
-            int[,] board;
-
-            /// <summary>
-            /// стек - история ходов
-            /// </summary>
-            Stack<Point> moves;
-
             /// <summary>
             /// ширина доски
             /// </summary>
-            public int Width
-            {
-                get { return this.width; }
-                set { this.width = value; }
-            }
+            public int Width;
 
             /// <summary>
             /// высота доски
             /// </summary>
-            public int Height
-            {
-                get { return this.height; }
-                set { this.height = value; }
-            }
+            public int Height;
 
             /// <summary>
             /// элементы (ячейки) доски
             /// </summary>
-            public int[,] Board => this.board;
+            public int[,] Board;
 
             /// <summary>
             /// стек - история ходов
             /// </summary>
-            public Stack<Point> Moves => this.moves;
+            public Stack<Point> Moves;
 
             /// <summary>
             /// конструктор объекта Доска
@@ -166,8 +138,8 @@ namespace ChessKnight
             {
                 this.Width = w;
                 this.Height = h;
-                this.board = new int[this.Width, this.Height];
-                this.moves = new Stack<Point>();
+                this.Board = new int[this.Width, this.Height];
+                this.Moves = new Stack<Point>();
             }
 
             /// <summary>
@@ -193,7 +165,7 @@ namespace ChessKnight
                 newPos = CalculateFigurePosition( figure, move );
 
                 //новая позиция фигуры вписывается в габариты доски и эта позиция еще не занята
-                if (newPos.W >= 0 && newPos.W < this.width && newPos.H >= 0 && newPos.H < this.height && !( this.moves.Contains( newPos ) )) return true;
+                if (newPos.W >= 0 && newPos.W < this.Width && newPos.H >= 0 && newPos.H < this.Height && !( this.Moves.Contains( newPos ) )) return true;
                 else return false;
             }
 
@@ -203,8 +175,8 @@ namespace ChessKnight
             /// <param name="figure"></param>
             public void AddFigureMove( ChessMan figure )
             {
-                this.moves.Push( figure.CurrentPosition );
-                this.board[figure.CurrentPosition.W, figure.CurrentPosition.H] = this.moves.Count;
+                this.Moves.Push( figure.CurrentPosition );
+                this.Board[figure.CurrentPosition.W, figure.CurrentPosition.H] = this.Moves.Count;
             }
 
             /// <summary>
@@ -212,12 +184,13 @@ namespace ChessKnight
             /// </summary>
             public void PrintBoard()
             {
-                for (int j = 0; j < this.width; j++)
+                for (int j = 0; j < this.Height; j++)
                 {
-                    for (int i = 0; i < this.height; i++)
+                    for (int i = 0; i < this.Width; i++)
                     {
                         Console.Write( $"\t{this.Board[i, j]}" );
                     }
+                    Console.WriteLine();
                     Console.WriteLine();
                 }
             }
@@ -232,18 +205,21 @@ namespace ChessKnight
         {
             if (board.Moves.Count >= ( board.Width * board.Height )) return;
 
-            bool IsPosibleMove = false;
-
             foreach (Point libNextMove in ChessKnight.MovesLib)
             {
-                IsPosibleMove = board.IsPosibleMove( figure, libNextMove, out Point newPosition );
+                if (board.Moves.Count >= ( board.Width * board.Height )) return;
+
+                if (!( board.Moves.Peek().Equals( figure.CurrentPosition ) ))
+                {
+                    board.Moves.Pop();
+                }
+
+                bool IsPosibleMove = board.IsPosibleMove( figure, libNextMove, out Point newPosition );
 
                 if (IsPosibleMove)
                 {
                     ChessKnight knight = new ChessKnight( newPosition.W, newPosition.H );
                     board.AddFigureMove( knight );
-
-                    if (board.Moves.Count >= ( board.Width * board.Height )) return;
 
                     AddFigureToBoard( knight, board );
                 }
